@@ -104,9 +104,13 @@ app.post('/messages', async (req, res) => {
 
 app.get('/messages', async (req, res) => {
     const encode = utf8
-    const { limit } = req.query
+    let { limit } = req.query
     const { user } = req.headers
+    limit = Number(limit)
+    console.log(limit)
 
+    if(limit === 0 || limit<0 || isNaN(limit))
+    return res.status(422).send('Limite inválido')
 
     try {
         let lastmessages
@@ -136,7 +140,7 @@ app.get('/messages', async (req, res) => {
                 }]
             })
             .toArray()
-        res.send(lastmessages)
+        res.send(lastmessages.reverse())
         }
 
     } catch (error) {
