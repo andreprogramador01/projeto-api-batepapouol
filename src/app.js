@@ -43,7 +43,8 @@ app.post('/participants', async (req, res) => {
 
 
     try {
-        const usuarioExiste = await db.collection('participants').findOne({ name: encodeUtf8(name) })
+        const usuarioExiste = await db.collection('participants').findOne({ name }, { name: 1 })
+        console.log(usuarioExiste)
         if (usuarioExiste) {
             res.sendStatus(409)
         } else {
@@ -53,6 +54,7 @@ app.post('/participants', async (req, res) => {
             res.sendStatus(201)
         }
     } catch (error) {
+        console.log(error)
         res.sendStatus(500)
     }
 
@@ -86,7 +88,6 @@ app.post('/messages', async (req, res) => {
     }
     try {
         const result = await db.collection('participants').findOne({ name: encode.decode(user) })
-        console.log(encode.decode(user))
         if (!result) {
             res.status(422).send('usuário não encontrado')
         } else {
@@ -124,7 +125,7 @@ app.get('/messages', async (req, res) => {
                     }, {
                         type: 'message'
                     }]
-                }, { projection: { to: 1, text: 1, type: 1, from: 1,time:1, _id: 0 } })
+                }, { projection: { to: 1, text: 1, type: 1, from: 1, time: 1, _id: 0 } })
 
                 .limit(limit)
                 .toArray()
@@ -135,7 +136,7 @@ app.get('/messages', async (req, res) => {
                     $or: [{
                         type: 'message'
                     }]
-                }, { projection: { to: 1, text: 1, type: 1, from: 1,time:1, _id: 0 } })
+                }, { projection: { to: 1, text: 1, type: 1, from: 1, time: 1, _id: 0 } })
                 .toArray()
             res.send(lastmessages.reverse())
         }
