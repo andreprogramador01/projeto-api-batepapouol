@@ -5,6 +5,7 @@ import cors from 'cors'
 import { MongoClient } from 'mongodb'
 import joi from 'joi'
 import utf8 from "utf8"
+import encodeUtf8 from 'encode-utf8'
 
 
 dotenv.config()
@@ -75,8 +76,8 @@ app.post('/messages', async (req, res) => {
         text: joi.string().required(),
         type: joi.string().valid('message', 'private_message').required()
     })
-    
-    if(user === "" || user === undefined) return res.status(422).send('Usuário inválido')
+
+    if (user === "" || user === undefined) return res.status(422).send('Usuário inválido')
 
     const validation = messageSchema.validate({ to, text, type }, { abortEarly: false })
     if (validation.error) {
@@ -89,7 +90,7 @@ app.post('/messages', async (req, res) => {
         if (!result) {
             res.status(422).send('usuário não encontrado')
         } else {
-            await db.collection('messages').insertOne({from: encode.decode(user), to, text, type, time: dayjS.format('HH:mm:ss')})
+            await db.collection('messages').insertOne({ from: encode.decode(user), to, text, type, time: dayjS.format('HH:mm:ss') })
             res.sendStatus(201)
         }
     } catch (error) {
@@ -98,6 +99,55 @@ app.post('/messages', async (req, res) => {
 
 
     //res.send('Ok')
+
+})
+
+app.get('/messages', async (req, res) => {
+    const encode = utf8
+    const { limit } = req.query
+    const { user } = req.headers
+
+
+    try {
+        let lastmessages
+        if (limit) {
+            lastmessages = await db.collection('messages')
+                .find({
+                    $or: [{
+                        from: encodeUtf8(user)
+                    }, {
+                        to: encodeUtf8(user)
+                    }, {
+                        type: 'message'
+                    }]
+                })
+                .limit(Number(limit))
+                .toArray()
+            res.send(lastmessages)
+        }else{
+            lastmessages = await db.collection('messages')
+            .find({
+                $or: [{
+                    from: encodeUtf8(user)
+                }, {
+                    to: encodeUtf8(user)
+                }, {
+                    type: 'message'
+                }]
+            })
+            .toArray()
+        res.send(lastmessages)
+        }
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).send(error)
+    }
+
+
+
+
+
 
 })
 
