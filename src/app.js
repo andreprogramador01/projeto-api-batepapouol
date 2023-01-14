@@ -124,7 +124,7 @@ app.get('/messages', async (req, res) => {
                     }, {
                         type: 'message'
                     }]
-                }, { projection: { to: 1, text: 1, type: 1, from: 1, _id: 0 } })
+                }, { projection: { to: 1, text: 1, type: 1, from: 1,time:1, _id: 0 } })
 
                 .limit(limit)
                 .toArray()
@@ -135,7 +135,7 @@ app.get('/messages', async (req, res) => {
                     $or: [{
                         type: 'message'
                     }]
-                }, { projection: { to: 1, text: 1, type: 1, from: 1, _id: 0 } })
+                }, { projection: { to: 1, text: 1, type: 1, from: 1,time:1, _id: 0 } })
                 .toArray()
             res.send(lastmessages.reverse())
         }
