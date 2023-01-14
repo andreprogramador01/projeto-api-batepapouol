@@ -43,7 +43,7 @@ app.post('/participants', async (req, res) => {
 
 
     try {
-        const usuarioExiste = await db.collection('participants').findOne({ name })
+        const usuarioExiste = await db.collection('participants').findOne({ name: encodeUtf8(name) })
         if (usuarioExiste) {
             res.sendStatus(409)
         } else {
@@ -107,7 +107,7 @@ app.get('/messages', async (req, res) => {
     let { limit } = req.query
     const { user } = req.headers
     limit = Number(limit)
-    console.log(limit)
+
 
     if (limit === 0 || limit < 0 || isNaN(limit))
         return res.status(422).send('Limite inválido')
@@ -124,17 +124,18 @@ app.get('/messages', async (req, res) => {
                     }, {
                         type: 'message'
                     }]
-                })
-                .limit(Number(limit))
+                }, { projection: { to: 1, text: 1, type: 1, from: 1, _id: 0 } })
+
+                .limit(limit)
                 .toArray()
-            res.send(lastmessages)
+            res.send(lastmessages.reverse())
         } else {
             lastmessages = await db.collection('messages')
                 .find({
                     $or: [{
                         type: 'message'
                     }]
-                })
+                }, { projection: { to: 1, text: 1, type: 1, from: 1, _id: 0 } })
                 .toArray()
             res.send(lastmessages.reverse())
         }
