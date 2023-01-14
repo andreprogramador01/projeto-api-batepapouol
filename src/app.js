@@ -109,8 +109,8 @@ app.get('/messages', async (req, res) => {
     limit = Number(limit)
     console.log(limit)
 
-    if(limit === 0 || limit<0 || isNaN(limit))
-    return res.status(422).send('Limite inválido')
+    if (limit === 0 || limit < 0 || isNaN(limit))
+        return res.status(422).send('Limite inválido')
 
     try {
         let lastmessages
@@ -128,19 +128,15 @@ app.get('/messages', async (req, res) => {
                 .limit(Number(limit))
                 .toArray()
             res.send(lastmessages)
-        }else{
+        } else {
             lastmessages = await db.collection('messages')
-            .find({
-                $or: [{
-                    from: encodeUtf8(user)
-                }, {
-                    to: encodeUtf8(user)
-                }, {
-                    type: 'message'
-                }]
-            })
-            .toArray()
-        res.send(lastmessages.reverse())
+                .find({
+                    $or: [{
+                        type: 'message'
+                    }]
+                })
+                .toArray()
+            res.send(lastmessages.reverse())
         }
 
     } catch (error) {
