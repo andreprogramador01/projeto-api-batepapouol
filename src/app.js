@@ -76,7 +76,7 @@ app.post('/messages', async (req, res) => {
         type: joi.string().valid('message', 'private_message').required()
     })
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-
+    if(!user) res.status(422).send('Usuário inválido')
     const validation = messageSchema.validate({ to, text, type }, { abortEarly: false })
     if (validation.error) {
         const errors = validation.error.details.map(detail => detail.message)
