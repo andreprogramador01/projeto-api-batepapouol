@@ -107,14 +107,32 @@ app.get('/messages', async (req, res) => {
     const encode = utf8
     let { limit } = req.query
     const { user } = req.headers
+    let lastmessages
+
+    if (limit === undefined) {
+        try {
+            lastmessages = await db.collection('messages')
+                .find({
+                    $or: [{
+                        type: 'message'
+                    }]
+                })
+                .toArray()
+            return res.send(lastmessages.reverse())
+        } catch (error) {
+            return res.status(500).send('Ocorreu um erro no banco de dados')
+        }
+
+    }
+
     limit = Number(limit)
 
-
-    if (limit === 0 || limit < 0 || isNaN(limit))
+    if ((limit === 0 || limit < 0 || isNaN(limit)) && limit !== undefined)
         return res.status(422).send('Limite inválido')
 
     try {
-        let lastmessages
+
+
         if (limit) {
             lastmessages = await db.collection('messages')
                 .find({
@@ -125,8 +143,7 @@ app.get('/messages', async (req, res) => {
                     }, {
                         type: 'message'
                     }]
-                }, { projection: { to: 1, text: 1, type: 1, from: 1, time: 1, _id: 0 } })
-
+                })
                 .limit(limit)
                 .toArray()
             res.send(lastmessages.reverse())
@@ -136,7 +153,7 @@ app.get('/messages', async (req, res) => {
                     $or: [{
                         type: 'message'
                     }]
-                }, { projection: { to: 1, text: 1, type: 1, from: 1, time: 1, _id: 0 } })
+                })
                 .toArray()
             res.send(lastmessages.reverse())
         }
