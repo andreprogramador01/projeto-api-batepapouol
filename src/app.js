@@ -38,7 +38,7 @@ setInterval(async () => {
     try {
         let listDeleteds = await db.collection('participants').find({ lastStatus: { $lt: Math.round(new Date(startDate).getTime()) } }).toArray()
         await db.collection('participants').deleteMany({ lastStatus: { $lt: Math.round(new Date(startDate).getTime()) } })
-        console.log(listDeleteds)
+       
         listDeleteds.map(async item => {
             await db.collection('messages').insertOne({ from: item.name, to: 'Todos', text: 'sai da sala...', type: 'status', time: dayjS.format('HH:mm:ss') })
         })
@@ -65,7 +65,7 @@ app.post('/participants', async (req, res) => {
 
     try {
         const usuarioExiste = await db.collection('participants').findOne({ name: name }, { name: 1 })
-        console.log(usuarioExiste)
+    
         if (usuarioExiste) {
             res.sendStatus(409)
         } else {
@@ -94,6 +94,9 @@ app.post('/messages', async (req, res) => {
     const { to, text, type } = req.body
     const { user } = req.headers
     const encode = utf8
+    const userDecoded = Buffer.from(user, 'utf8').toString()
+
+
     const messageSchema = joi.object({
         to: joi.string().required(),
         text: joi.string().required(),
@@ -108,11 +111,11 @@ app.post('/messages', async (req, res) => {
         return res.status(422).send(errors)
     }
     try {
-        const result = await db.collection('participants').findOne({ name: encode.decode(user) })
+        const result = await db.collection('participants').findOne({ name: userDecoded })
         if (!result) {
             res.status(422).send('usuário não encontrado')
         } else {
-            await db.collection('messages').insertOne({ from: encode.decode(user), to, text, type, time: dayjS.format('HH:mm:ss') })
+            await db.collection('messages').insertOne({ from: userDecoded, to, text, type, time: dayjS.format('HH:mm:ss') })
             res.sendStatus(201)
         }
     } catch (error) {
