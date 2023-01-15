@@ -2,10 +2,11 @@ import express from 'express'
 import dotenv from 'dotenv'
 import dayjs from 'dayjs'
 import cors from 'cors'
-import { MongoClient } from 'mongodb'
+import { Db, MongoClient } from 'mongodb'
 import joi from 'joi'
 import utf8 from "utf8"
 import encodeUtf8 from 'encode-utf8'
+import bodyParser from 'body-parser'
 
 
 dotenv.config()
@@ -17,6 +18,10 @@ const app = express()
 
 app.use(express.json())
 app.use(cors())
+
+
+
+
 let db
 
 try {
@@ -34,7 +39,7 @@ app.post('/participants', async (req, res) => {
     const nameSchema = joi.object({
         name: joi.string().required()
     })
-    const validation = nameSchema.validate({ name }, { abortEarly: false })
+    const validation = nameSchema.validate({ name: (name) }, { abortEarly: false })
 
     if (validation.error) {
         const errors = validation.error.details.map(detail => detail.message)
@@ -43,7 +48,7 @@ app.post('/participants', async (req, res) => {
 
 
     try {
-        const usuarioExiste = await db.collection('participants').findOne({ name }, { name: 1 })
+        const usuarioExiste = await db.collection('participants').findOne({ name: encodeUtf8(name) }, { name: 1 })
         console.log(usuarioExiste)
         if (usuarioExiste) {
             res.sendStatus(409)
@@ -112,11 +117,7 @@ app.get('/messages', async (req, res) => {
     if (limit === undefined) {
         try {
             lastmessages = await db.collection('messages')
-                .find({
-                    $or: [{
-                        type: 'message'
-                    }]
-                })
+                .find({ type: 'message' })
                 .toArray()
             return res.send(lastmessages.reverse())
         } catch (error) {
@@ -127,7 +128,7 @@ app.get('/messages', async (req, res) => {
 
     limit = Number(limit)
 
-    if ((limit === 0 || limit < 0 || isNaN(limit)) && limit !== undefined)
+    if (limit === 0 || limit < 0 || isNaN(limit))
         return res.status(422).send('Limite inválido')
 
     try {
@@ -168,6 +169,29 @@ app.get('/messages', async (req, res) => {
 
 
 
+})
+app.post('/status', async (req, res) => {
+    const { user } = req.headers
+    const { decode } = utf8
+    const userDecoded = Buffer.from(user, 'utf8').toString()
+
+    
+    try {
+        const result = await db.collection('participants').findOne({ name: userDecoded })
+        if (!result) {
+            res.sendStatus(404)
+        } else {
+            const   updateResult = await db.collection('participants').updateOne({ name: userDecoded }, { $set: { lastStatus: Date.now() } })
+            
+            res.send('ok')
+        }
+
+
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).send('Ocorreu um erro no banco de dados')
+    }
 })
 
 app.listen(5000)
