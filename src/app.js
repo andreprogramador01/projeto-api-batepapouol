@@ -94,8 +94,7 @@ app.post('/messages', async (req, res) => {
     const { to, text, type } = req.body
     const { user } = req.headers
     const encode = utf8
-    const userDecoded = Buffer.from(user, 'utf8').toString()
-
+    
 
     const messageSchema = joi.object({
         to: joi.string().required(),
@@ -104,6 +103,9 @@ app.post('/messages', async (req, res) => {
     })
 
     if (user === "" || user === undefined) return res.status(422).send('Usuário inválido')
+
+    const userDecoded = Buffer.from(user, 'utf8').toString()
+
 
     const validation = messageSchema.validate({ to, text, type }, { abortEarly: false })
     if (validation.error) {
