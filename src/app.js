@@ -2,7 +2,7 @@ import express from 'express'
 import dotenv from 'dotenv'
 import dayjs from 'dayjs'
 import cors from 'cors'
-import { Db, MongoClient } from 'mongodb'
+import { MongoClient } from 'mongodb'
 import joi from 'joi'
 import utf8 from "utf8"
 import encodeUtf8 from 'encode-utf8'
@@ -32,12 +32,26 @@ try {
     console.log('Erro no servidor')
 }
 
+setInterval(async () => {
+    const endDate = new Date()
+    const startDate = new Date(endDate - 10 * 1000)
+    try {
+        let listDeleteds = await db.collection('participants').find({ lastStatus: { $lt: Math.round(new Date(startDate).getTime()) } }).toArray()
+        await db.collection('participants').deleteMany({ lastStatus: { $lt: Math.round(new Date(startDate).getTime()) } })
+        console.log(listDeleteds)
+        listDeleteds.map(async item => {
+            await db.collection('messages').insertOne({ from: item.name, to: 'Todos', text: 'sai da sala...', type: 'status', time: dayjS.format('HH:mm:ss') })
+        })
+    } catch (error) {
+        console.log(error)
+    }
 
+}, 15000)
 
 app.post('/participants', async (req, res) => {
     const { name } = req.body
-    
-    
+
+
     const nameSchema = joi.object({
         name: joi.string().required()
     })
@@ -115,6 +129,7 @@ app.get('/messages', async (req, res) => {
     let { limit } = req.query
     const { user } = req.headers
     let lastmessages
+    const userDecoded = Buffer.from(user, 'utf8').toString()
 
     if (limit === undefined) {
         try {
@@ -140,9 +155,9 @@ app.get('/messages', async (req, res) => {
             lastmessages = await db.collection('messages')
                 .find({
                     $or: [{
-                        from: encodeUtf8(user)
+                        from: userDecoded
                     }, {
-                        to: encodeUtf8(user)
+                        to: userDecoded
                     }, {
                         type: 'message'
                     }]
@@ -177,14 +192,14 @@ app.post('/status', async (req, res) => {
     const { decode } = utf8
     const userDecoded = Buffer.from(user, 'utf8').toString()
 
-    
+
     try {
         const result = await db.collection('participants').findOne({ name: userDecoded })
         if (!result) {
             res.sendStatus(404)
         } else {
-            const   updateResult = await db.collection('participants').updateOne({ name: userDecoded }, { $set: { lastStatus: Date.now() } })
-            
+            const updateResult = await db.collection('participants').updateOne({ name: userDecoded }, { $set: { lastStatus: Date.now() } })
+
             res.send('ok')
         }
 
