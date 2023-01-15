@@ -119,7 +119,7 @@ app.get('/messages', async (req, res) => {
             lastmessages = await db.collection('messages')
                 .find({ type: 'message' })
                 .toArray()
-            return res.send(lastmessages.reverse())
+            return res.send([...lastmessages].reverse())
         } catch (error) {
             return res.status(500).send('Ocorreu um erro no banco de dados')
         }
@@ -147,7 +147,7 @@ app.get('/messages', async (req, res) => {
                 })
                 .limit(limit)
                 .toArray()
-            res.send(lastmessages.reverse())
+            res.send([...lastmessages].reverse())
         } else {
             lastmessages = await db.collection('messages')
                 .find({
@@ -156,7 +156,7 @@ app.get('/messages', async (req, res) => {
                     }]
                 })
                 .toArray()
-            res.send(lastmessages.reverse())
+            res.send([...lastmessages].reverse())
         }
 
     } catch (error) {
