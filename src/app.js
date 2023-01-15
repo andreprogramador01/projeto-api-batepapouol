@@ -7,6 +7,7 @@ import joi from 'joi'
 import utf8 from "utf8"
 import encodeUtf8 from 'encode-utf8'
 import bodyParser from 'body-parser'
+import e from 'cors'
 
 
 dotenv.config()
@@ -35,7 +36,8 @@ try {
 
 app.post('/participants', async (req, res) => {
     const { name } = req.body
-
+    
+    
     const nameSchema = joi.object({
         name: joi.string().required()
     })
@@ -48,7 +50,7 @@ app.post('/participants', async (req, res) => {
 
 
     try {
-        const usuarioExiste = await db.collection('participants').findOne({ name: encodeUtf8(name) }, { name: 1 })
+        const usuarioExiste = await db.collection('participants').findOne({ name: name }, { name: 1 })
         console.log(usuarioExiste)
         if (usuarioExiste) {
             res.sendStatus(409)
