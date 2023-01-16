@@ -149,6 +149,7 @@ app.get('/messages', async (req, res) => {
     let { limit } = req.query
     const { user } = req.headers
     let lastmessages
+    let userDecoded
 
 
 
@@ -171,11 +172,11 @@ app.get('/messages', async (req, res) => {
     }
 
 
-    if (user) {
-        const userDecoded = Buffer.from(user, 'utf8').toString()
-    }
+        if(user) {
 
-    try {
+         userDecoded = Buffer.from(user, 'utf8').toString()
+        }
+        try {
 
 
         if (limit) {
