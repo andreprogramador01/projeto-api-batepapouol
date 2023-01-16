@@ -38,9 +38,16 @@ setInterval(async () => {
     try {
         let listDeleteds = await db.collection('participants').find({ lastStatus: { $lt: Math.round(new Date(startDate).getTime()) } }).toArray()
         await db.collection('participants').deleteMany({ lastStatus: { $lt: Math.round(new Date(startDate).getTime()) } })
-       
+
         listDeleteds.map(async item => {
-            await db.collection('messages').insertOne({ from: item.name, to: 'Todos', text: 'sai da sala...', type: 'status', time: dayjS.format('HH:mm:ss') })
+            await db.collection('messages')
+                .insertOne({
+                    from: item.name,
+                    to: 'Todos',
+                    text: 'sai da sala...',
+                    type: 'status',
+                    time: dayjS.format('HH:mm:ss')
+                })
         })
     } catch (error) {
         console.log(error)
@@ -65,7 +72,7 @@ app.post('/participants', async (req, res) => {
 
     try {
         const usuarioExiste = await db.collection('participants').findOne({ name: name }, { name: 1 })
-    
+
         if (usuarioExiste) {
             res.sendStatus(409)
         } else {
@@ -93,8 +100,8 @@ app.get('/participants', async (req, res) => {
 app.post('/messages', async (req, res) => {
     const { to, text, type } = req.body
     const { user } = req.headers
-    const encode = utf8
-    
+
+
 
     const messageSchema = joi.object({
         to: joi.string().required(),
@@ -106,6 +113,7 @@ app.post('/messages', async (req, res) => {
 
     const userDecoded = Buffer.from(user, 'utf8').toString()
 
+    console.log(userDecoded)
 
     const validation = messageSchema.validate({ to, text, type }, { abortEarly: false })
     if (validation.error) {
@@ -117,7 +125,14 @@ app.post('/messages', async (req, res) => {
         if (!result) {
             res.status(422).send('usuário não encontrado')
         } else {
-            await db.collection('messages').insertOne({ from: userDecoded, to, text, type, time: dayjS.format('HH:mm:ss') })
+            await db.collection('messages')
+            .insertOne({
+                    from: userDecoded,
+                    to,
+                    text,
+                    type,
+                    time: dayjS.format('HH:mm:ss')
+                })
             res.sendStatus(201)
         }
     } catch (error) {
@@ -167,9 +182,9 @@ app.get('/messages', async (req, res) => {
                         type: 'message'
                     }]
                 })
-                .limit(limit)
+                
                 .toArray()
-            res.send([...lastmessages].reverse())
+            res.send([...lastmessages].slice(-limit).reverse())
         } else {
             lastmessages = await db.collection('messages')
                 .find({
