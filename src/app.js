@@ -156,7 +156,15 @@ app.get('/messages', async (req, res) => {
     if (limit === undefined) {
         try {
             lastmessages = await db.collection('messages')
-                .find({ type: 'message' })
+                .find({
+                    $or: [{
+                        from: userDecoded
+                    }, {
+                        to: userDecoded
+                    }, {
+                        to: 'Todos'
+                    }]
+                })
                 .toArray()
             return res.send([...lastmessages].reverse())
         } catch (error) {
@@ -172,35 +180,29 @@ app.get('/messages', async (req, res) => {
     }
 
 
-        if(user) {
+    if (user) {
 
-         userDecoded = Buffer.from(user, 'utf8').toString()
-        }
-        try {
+        userDecoded = Buffer.from(user, 'utf8').toString()
+    }
+    try {
+        lastmessages = await db.collection('messages')
+            .find({
+                $or: [{
+                    from: userDecoded
+                }, {
+                    to: userDecoded
+                }, {
+                    to: 'Todos'
+                }]
+            })
 
+            .toArray()
 
         if (limit) {
-            lastmessages = await db.collection('messages')
-                .find({
-                    $or: [{
-                        from: userDecoded
-                    }, {
-                        to: userDecoded
-                    }, {
-                        type: 'message'
-                    }]
-                })
 
-                .toArray()
             res.send([...lastmessages].slice(-limit).reverse())
         } else {
-            lastmessages = await db.collection('messages')
-                .find({
-                    $or: [{
-                        type: 'message'
-                    }]
-                })
-                .toArray()
+
             res.send([...lastmessages].reverse())
         }
 
