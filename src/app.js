@@ -126,7 +126,7 @@ app.post('/messages', async (req, res) => {
             res.status(422).send('usuário não encontrado')
         } else {
             await db.collection('messages')
-            .insertOne({
+                .insertOne({
                     from: userDecoded,
                     to,
                     text,
@@ -149,10 +149,8 @@ app.get('/messages', async (req, res) => {
     let { limit } = req.query
     const { user } = req.headers
     let lastmessages
-    if(user){
-        const userDecoded = Buffer.from(user, 'utf8').toString()
-    }
-    
+
+
 
     if (limit === undefined) {
         try {
@@ -168,8 +166,14 @@ app.get('/messages', async (req, res) => {
 
     limit = Number(limit)
 
-    if (limit === 0 || limit < 0 || isNaN(limit))
+    if (limit === 0 || limit < 0 || isNaN(limit)) {
         return res.status(422).send('Limite inválido')
+    }
+
+
+    if (user) {
+        const userDecoded = Buffer.from(user, 'utf8').toString()
+    }
 
     try {
 
@@ -180,12 +184,12 @@ app.get('/messages', async (req, res) => {
                     $or: [{
                         from: userDecoded
                     }, {
-                        to: { $in: [userDecoded, "Todos"] }
+                        to: userDecoded
                     }, {
                         type: 'message'
                     }]
                 })
-                
+
                 .toArray()
             res.send([...lastmessages].slice(-limit).reverse())
         } else {
