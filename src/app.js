@@ -149,7 +149,10 @@ app.get('/messages', async (req, res) => {
     let { limit } = req.query
     const { user } = req.headers
     let lastmessages
-    const userDecoded = Buffer.from(user, 'utf8').toString()
+    if(user){
+        const userDecoded = Buffer.from(user, 'utf8').toString()
+    }
+    
 
     if (limit === undefined) {
         try {
@@ -177,7 +180,7 @@ app.get('/messages', async (req, res) => {
                     $or: [{
                         from: userDecoded
                     }, {
-                        to: userDecoded
+                        to: { $in: [userDecoded, "Todos"] }
                     }, {
                         type: 'message'
                     }]
